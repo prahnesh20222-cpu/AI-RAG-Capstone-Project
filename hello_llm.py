@@ -5,7 +5,8 @@ from openai import OpenAI
 # Load OPENAI_API_KEY from the environment — never hard-code keys
 load_dotenv()
 client = OpenAI()
-
+print("OpenAI API Key loaded from environment:", "OPENAI_API_KEY" in os.environ)
+print(f'base url used is {os.environ.get("OPENAI_BASE_URL")}')
 def ask(question):
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
