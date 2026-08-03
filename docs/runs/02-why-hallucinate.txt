@@ -1,0 +1,16 @@
+OpenAI API Key loaded from environment: True
+An LLM might hallucinate due to several factors:
+
+1. **Training Data Limitations**: It may encounter gaps, biases, or inaccuracies in its training data, leading to incorrect outputs.
+
+2. **Ambiguity in Input**: Vague or ambiguous prompts can confuse the model, prompting it to generate unfounded information.
+
+3. **Extrapolation**: LLMs may make inferences beyond their training, generating plausible-sounding but unverified information.
+
+4. **Pattern Recognition**: The model relies heavily on patterns in the data, which could lead to fabricating details that align with those patterns.
+
+5. **Confidence in Response**: LLMs produce responses based on probabilities, sometimes resulting in confident assertions of false information.
+
+6. **Memory Limitations**: Models don’t possess a real understanding or memory; they generate text based solely on learned associations.
+
+These factors can combine in varying ways to produce hallucinations or errors in generated content.

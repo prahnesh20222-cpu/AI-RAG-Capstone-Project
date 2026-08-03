@@ -1,0 +1,2 @@
+OpenAI API Key loaded from environment: True
+RAG stands for Retrieval-Augmented Generation, a model that combines information retrieval with natural language generation to produce more accurate and contextually relevant responses.

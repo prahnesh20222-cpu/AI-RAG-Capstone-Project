@@ -1,0 +1,6 @@
+OpenAI API Key loaded from environment: True
+1. **Recommendation Systems**: Vector databases are used to store and retrieve user and item embeddings, enabling personalized content suggestions based on similarity.
+
+2. **Natural Language Processing (NLP)**: They store word, sentence, or document embeddings to facilitate tasks like semantic search and text classification by enabling efficient similarity searches.
+
+3. **Image Retrieval**: Vector databases can index image embeddings, allowing for quick searches and retrieval of similar images based on visual characteristics, commonly used in applications like image search engines.
