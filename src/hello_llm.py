@@ -22,7 +22,7 @@ def ask(question):
             {"role": "user",   "content": question},
         ],
     )
-    #print(resp)
+    
     return resp.choices[0].message.content
 
 if __name__ == "__main__":
