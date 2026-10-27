@@ -9,6 +9,10 @@ Functions:
 """
 import logging
 import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LOG_FILE = PROJECT_ROOT / "app.log"
 
 def setup_logger(name: str) -> logging.Logger:
     """
@@ -18,7 +22,7 @@ def setup_logger(name: str) -> logging.Logger:
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         #handler = logging.StreamHandler(sys.stdout)
-        handler = logging.FileHandler("app.log", mode="a",encoding="utf-8") # mode=a is for appending
+        handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8") # mode=a is for appending
         handler.setLevel(logging.INFO)
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
