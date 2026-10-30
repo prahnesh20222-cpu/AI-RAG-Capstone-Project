@@ -1,6 +1,6 @@
 """Run the Markdown loader on every .md and .txt file in a configured folder.
 
-Set MARKDOWN_TEST_DIRECTORY in config/settings.py or in the .env file, then run:
+Set CORPUS_DIRECTORY in config/settings.py or in the .env file, then run:
     python scripts/test_markdown_loader.py
 """
 
@@ -18,10 +18,10 @@ from src.rag.markdown_loader import MarkdownLoader, process_markdown_file  # noq
 
 
 def main() -> int:
-    configured_path = settings.MARKDOWN_TEST_DIRECTORY.strip()
+    configured_path = settings.CORPUS_DIRECTORY.strip()
     if not configured_path:
         print(
-            "Set MARKDOWN_TEST_DIRECTORY in config/settings.py or .env.",
+            "Set CORPUS_DIRECTORY in config/settings.py or .env.",
             file=sys.stderr,
         )
         return 2

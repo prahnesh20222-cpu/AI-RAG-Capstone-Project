@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     TARGET_CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     # Directory used by scripts/test_markdown_loader.py for loader checks.
-    MARKDOWN_TEST_DIRECTORY: str = "C:\\Users\\prahn\\OneDrive\\Documents\\IITM-Pravartak\\AI-RAG-Capstone-Project\\starter\\corpus"
+    CORPUS_DIRECTORY: str = "C:\\Users\\prahn\\OneDrive\\Documents\\IITM-Pravartak\\AI-RAG-Capstone-Project\\starter\\corpus"
     VECTOR_STORE_TYPE: str = ""
     QDRANT_URL: str = ""
     QDRANT_API_KEY: str = ""
