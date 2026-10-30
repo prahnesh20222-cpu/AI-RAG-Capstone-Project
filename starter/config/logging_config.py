@@ -31,5 +31,3 @@ def setup_logger(name: str) -> logging.Logger:
         logger.addHandler(handler)
     return logger
 
-logger = setup_logger("RAG_Pipeline_Logger")
-logger.info("Logger initialized and ready to capture logs.")
