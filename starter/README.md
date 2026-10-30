@@ -1,66 +1,96 @@
-# Capstone: RAG Pipeline
+# RAG Pipeline
 
-This repository contains the production-ready structure for an end-to-end Retrieval Augmented Generation (RAG) system.
+This repository contains a FastAPI health endpoint and a Markdown loading and
+chunking module. The current code does not connect chunks to an embedding model,
+vector store, retriever, or answer generator.
 
-## 📂 Detailed Folder Structure & Contents
+## Current functionality
 
-### `src/` (Source Code)
-The main codebase, containing all core logic for the RAG application.
-- **`rag/`**: The core RAG engine. 
-  - `chunking.py`: Logic for splitting documents (recursive, semantic, token-based).
-  - `embeddings.py`: Wrappers for embedding models (OpenAI, HuggingFace).
-  - `vector_store.py`: Abstraction layer for interacting with vector databases (ChromaDB, Pinecone).
-  - `retriever.py`: Logic for finding relevant chunks (dense, sparse, hybrid search).
-  - `generator.py`: Prompt construction and interaction with the LLM to generate the final answer.
-  - `prompts/`: Contains `.txt` files with system and user prompt templates.
-- **`eval/`**: Evaluation logic to score the RAG pipeline.
-  - `judge.py`: LLM-as-a-judge implementation to grade answers.
-  - `golden.py`: Utilities for evaluating against known golden datasets.
-  - `pairwise.py`: A/B testing logic to compare two models.
-  - `critic_creator.py`: Experimental agents designed to find flaws in generated text.
-- **`pipeline/`**: Data persistence and orchestration.
-  - `store.py`: SQLite-based experiment tracking to log queries, answers, and scores.
-- **`schemas/`**: Pydantic models defining input/output structures for the API and internal data flow.
-  - `api.py`: FastAPI request and response models.
-  - `rag.py`: Internal structures like `DocumentChunk` and `RetrievalResult`.
+### API
 
-### `api/` (Backend API)
-- `main.py`: The FastAPI application exposing the RAG pipeline as RESTful endpoints (`/upload`, `/query`). Serves as the backend for the UI.
+The FastAPI application provides one endpoint:
 
-### `ui/` (User Interface)
-- `app.py`: The Streamlit frontend providing a chat interface, document upload, and configuration sidebars.
-- `components/`: Reusable Streamlit UI components (e.g., custom chat bubbles).
+- `GET /health` returns `{"status": "ok"}`.
 
-### `data/` (Datasets & Storage)
-- **`uploads/`**: Temporary storage for files uploaded via the UI.
-- **`raw_markdown/`**: Source knowledge base documents (`.md`, `.txt`) awaiting ingestion.
-- **`db/`**: Persistent local storage, including SQLite databases for experiment tracking and ChromaDB vector indexes.
-- **`temp/`**: Short-lived artifacts and JSON dumps used during processing.
-- `golden_set.jsonl`: Benchmark datasets used for automated evaluation.
+### Markdown loading and chunking
 
-### `notebooks/`
-- Jupyter notebooks (`.ipynb`) used for exploratory data analysis, testing chunking strategies, and visualization.
+The Markdown module can:
 
-### `scripts/` (Execution)
-Command-line Python scripts used for running evaluations and batch tasks.
-- `run_eval.py`: Run standard evaluations.
-- `run_rag_eval.py`: Orchestrate end-to-end pipeline evaluations.
-- `run_pairwise.py`: Run A/B comparisons.
+- Read `.md` files as UTF-8 text.
+- Parse optional YAML front matter.
+- Preserve unrecognized front matter fields in source metadata.
+- Split Markdown into sections by headings.
+- Avoid treating headings inside fenced code blocks as section headings.
+- Pack whole paragraphs into chunks up to a configured character target.
+- Attach document and section metadata to each chunk.
 
-### `bin/` (Shell Utilities)
-- `setup_env.sh` / `.ps1`: Scripts to install dependencies (via `pyproject.toml`) and create virtual environments.
-- `run_app.sh` / `.ps1`: Scripts to concurrently launch the FastAPI server and Streamlit UI.
+The Markdown loader is not connected to the FastAPI application.
 
-### `tests/`
-Unit tests isolating specific components.
-- `test_rag.py`: Tests for chunking, embedding, and retrieval.
-- `test_judge.py`, `test_api.py`, `test_ui.py`: Asserts correctness for evaluation, API endpoints, and UI logic.
+## Project layout
 
-### `docs/`
-Documentation, templates, and architecture decisions.
-- `adr/`: Architecture Decision Records.
-- `dr/`: Design Review materials.
+- `api/` — FastAPI application.
+- `config/` — Pydantic settings and logging configuration.
+- `scripts/` — Markdown loader script and evaluation runner files.
+- `src/rag/` — Markdown loader and other RAG module files.
+- `src/schemas/` — API schemas and shared document and chunk models.
+- `src/eval/` — Evaluation module files.
+- `tests/` — Test module files.
+- `data/` — Golden set JSONL files and data storage directories.
 
-### `config/`
-- `settings.py`: Centralized configuration mapping to `.env` variables using `pydantic-settings` (API keys, DB paths, embedding models).
-- `logging_config.py`: Standardized logging setup for the application.
+## Setup
+
+Install project dependencies from the project root:
+
+```bash
+pip install -e .
+```
+
+Settings are read from `.env`. `config/settings.py` defines settings for OpenAI,
+chunk sizing, vector store configuration, and the Markdown loader script.
+
+The checked-in `.env.example` does not use all setting names defined in
+`config/settings.py`. Review the settings module before using `.env.example`
+as a configuration template.
+
+## Run the API
+
+From the project root, run:
+
+```bash
+uvicorn api.main:app --reload
+```
+
+The health endpoint is available at:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+## Run the Markdown loader script
+
+The script reads the directory configured by `MARKDOWN_TEST_DIRECTORY` in
+`config/settings.py` or `.env`. It searches that directory and its
+subdirectories for `.md` and `.txt` files.
+
+For Markdown files, it prints the number of chunks and the first 100 characters
+of each chunk. For `.txt` files, it prints the Markdown loader's file extension
+error.
+
+Run the script from the project root:
+
+```bash
+python scripts/test_markdown_loader.py
+```
+
+The Markdown loader imports PyYAML. PyYAML is not listed as a direct dependency
+in `pyproject.toml`.
+
+## Current limitations
+
+- The API implements only a health endpoint. It does not provide document upload or query endpoints.
+- The project does not have an implemented end-to-end RAG flow for ingestion, embedding, retrieval, or answer generation.
+- The Markdown loader is not connected to the API.
+- The Streamlit entry file does not currently implement a user interface.
+- PDF and general text loaders are not implemented.
+- The evaluation runner and test files do not currently contain executable evaluation or test logic.
+- The older `src/rag/md_loader.py` corpus adapter refers to names that are not defined or imported in that file.
