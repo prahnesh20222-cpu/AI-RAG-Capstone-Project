@@ -1,96 +1,125 @@
-# RAG Pipeline
+# RAG Knowledge Engineering Platform
 
-This repository contains a FastAPI health endpoint and a Markdown loading and
-chunking module. The current code does not connect chunks to an embedding model,
-vector store, retriever, or answer generator.
+This project aims to build a reliable knowledge foundation for Retrieval-Augmented Generation (RAG): convert information sources into traceable, structured knowledge that applications can search and use as evidence. The longer-term direction includes knowledge-aware AI agents.
 
-## Current functionality
+The repository is an early-stage implementation. The goal and future directions below describe intended capabilities; the current status section distinguishes those from what the code currently does.
+
+## Project goal
+
+Documents and other information sources often contain useful structure and context that can be lost when they are reduced to plain text and vectors. This project aims to preserve source meaning, structure, metadata, and provenance through processing so retrieved evidence can be inspected and traced back to its origin.
+
+The intended processing flow is:
+
+```text
+Source documents → structure extraction → semantic enrichment → canonical Markdown
+                 → chunking and metadata → embeddings → vector storage
+                 → retrieval → grounded RAG responses
+```
+
+Extraction should preserve source content and structure. Semantic enrichment may add topics, concepts, entities, decisions, or other metadata, but must not replace original evidence. Model-generated fields should be validated, and uncertain results should be reviewable.
+
+## Current implementation
 
 ### API
 
-The FastAPI application provides one endpoint:
+The FastAPI application currently exposes one endpoint:
 
 - `GET /health` returns `{"status": "ok"}`.
 
-### Markdown loading and chunking
+There are no implemented document-upload, query, or metrics endpoints.
 
-The Markdown module can:
+### Markdown processing
 
-- Read `.md` files as UTF-8 text.
-- Parse optional YAML front matter.
-- Preserve unrecognized front matter fields in source metadata.
-- Split Markdown into sections by headings.
-- Avoid treating headings inside fenced code blocks as section headings.
-- Pack whole paragraphs into chunks up to a configured character target.
-- Attach document and section metadata to each chunk.
+`src/rag/markdown_loader.py` implements a Markdown-specific loading and chunking path. It can:
 
-The Markdown loader is not connected to the FastAPI application.
+- Read `.md` files as UTF-8.
+- Parse optional YAML front matter into shared document metadata, retaining unrecognized fields as source metadata.
+- Split content into sections by Markdown headings while ignoring headings inside fenced code blocks.
+- Pack whole paragraphs within each section up to a configured character target.
+- Attach document, section, source, and count metadata to chunks.
+- Recursively load Markdown files from a corpus directory through `load_markdown_chunks`.
 
-## Project layout
+The chunk target is measured in characters, not tokens. This processing path is not connected to the FastAPI application.
 
-- `api/` — FastAPI application.
-- `config/` — Pydantic settings and logging configuration.
-- `scripts/` — Markdown loader script and evaluation runner files.
-- `src/rag/` — Markdown loader and other RAG module files.
-- `src/schemas/` — API schemas and shared document and chunk models.
-- `src/eval/` — Evaluation module files.
-- `tests/` — Test module files.
-- `data/` — Golden set JSONL files and data storage directories.
+The script `scripts/test_markdown_loader.py` scans the configured corpus directory for `.md` and `.txt` files. It processes Markdown files and prints chunk previews; `.txt` files are identified but rejected by the Markdown-only loader.
 
-## Setup
+### Other code in the repository
 
-Install project dependencies from the project root:
+The repository includes shared document and API schemas, configuration and logging modules, evaluation-related Python modules and scripts, and placeholder modules describing planned chunking, embedding, retrieval, generation, vector storage, and evaluation functionality. The presence of those files or declared dependencies does not mean those capabilities are implemented as a working end-to-end pipeline. The evaluation scripts and Streamlit entry file do not currently provide executable evaluation workflows or a user interface.
+
+## Technical details and setup
+
+The project uses Python, FastAPI, Pydantic Settings, and a `src/` package layout. Install the dependencies declared in `pyproject.toml` from the project root:
 
 ```bash
 pip install -e .
 ```
 
-Settings are read from `.env`. `config/settings.py` defines settings for OpenAI,
-chunk sizing, vector store configuration, and the Markdown loader script.
+Configuration is loaded from `.env` by `config/settings.py`. Defined settings include OpenAI model and API fields, character-based chunk sizing (`TARGET_CHUNK_SIZE`, default `500`), overlap (`CHUNK_OVERLAP`, default `50`), corpus directory, vector-store and Qdrant fields, and `TOP_K` (default `5`). These settings do not establish that the corresponding model or vector-store functionality is implemented. Review `config/settings.py` and `.env.example` before configuring the project; the example file does not currently match all setting names.
 
-The checked-in `.env.example` does not use all setting names defined in
-`config/settings.py`. Review the settings module before using `.env.example`
-as a configuration template.
+The Markdown loader imports PyYAML, but PyYAML is not listed as a direct dependency in `pyproject.toml`. Install it separately if it is not already available in the environment.
 
-## Run the API
+### Run the API
 
-From the project root, run:
+From the project root:
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
-The health endpoint is available at:
+The health endpoint is available at `http://127.0.0.1:8000/health`.
 
-```text
-http://127.0.0.1:8000/health
-```
+### Run the Markdown loader script
 
-## Run the Markdown loader script
-
-The script reads the directory configured by `MARKDOWN_TEST_DIRECTORY` in
-`config/settings.py` or `.env`. It searches that directory and its
-subdirectories for `.md` and `.txt` files.
-
-For Markdown files, it prints the number of chunks and the first 100 characters
-of each chunk. For `.txt` files, it prints the Markdown loader's file extension
-error.
-
-Run the script from the project root:
+Set `CORPUS_DIRECTORY` in `config/settings.py` or `.env`, then run from the project root:
 
 ```bash
 python scripts/test_markdown_loader.py
 ```
 
-The Markdown loader imports PyYAML. PyYAML is not listed as a direct dependency
-in `pyproject.toml`.
+The script searches the configured directory and subdirectories for `.md` and `.txt` files. Only Markdown files are processed into chunks.
 
-## Current limitations
+## Repository layout
 
-- The API implements only a health endpoint. It does not provide document upload or query endpoints.
-- The project does not have an implemented end-to-end RAG flow for ingestion, embedding, retrieval, or answer generation.
-- The Markdown loader is not connected to the API.
-- The Streamlit entry file does not currently implement a user interface.
-- PDF and general text loaders are not implemented.
-- The evaluation runner and test files do not currently contain executable evaluation or test logic.
+- `api/` — FastAPI application.
+- `config/` — settings and logging configuration.
+- `scripts/` — Markdown loader utility and evaluation runner entry points.
+- `src/rag/` — Markdown processing and RAG-related modules, including placeholders.
+- `src/schemas/` — shared document, chunk, RAG, and API models.
+- `src/pipeline/` — pipeline-related module currently containing a placeholder store module.
+- `src/eval/` — evaluation-related modules.
+- `ui/` — Streamlit entry file, currently a placeholder.
+- `tests/` — test files; the current files do not contain executable test logic.
+- `data/` — evaluation and data storage directories.
+- `corpus/` — corpus directory used by local processing configuration.
+
+## Known limitations
+
+- There is no working end-to-end ingestion, embedding, vector indexing, retrieval, and answer-generation flow.
+- The Markdown processor is not wired into the API; PDF and general text loaders are not implemented.
+- The Streamlit entry file does not implement a UI.
+- Evaluation runner files and current test files do not provide executable evaluation or test logic.
 - The older `src/rag/md_loader.py` corpus adapter refers to names that are not defined or imported in that file.
+- PyYAML is imported by the Markdown loader but is absent from the declared dependencies.
+
+## Design principles
+
+- Preserve original evidence and source provenance throughout processing.
+- Keep deterministic parsing, chunking, metadata handling, validation, and storage separate from model interpretation.
+- Use controlled vocabularies for classification and validate structured model output.
+- Keep chunks traceable to source documents and relevant locations.
+- Evaluate quality before adding complexity, and control processing cost.
+
+## Future directions
+
+The following are proposals, not implemented features or committed technology choices:
+
+1. Add source adapters and structure-aware extraction for formats such as PDF, webpages, transcripts, DOCX, and presentations.
+2. Add bounded semantic enrichment for topics, concepts, entities, decisions, and controlled glossary terms. The strategy document proposes evaluating a local Qwen3 4B model for these tasks; it is not currently wired into this repository.
+3. Produce canonical Markdown with source metadata and provenance as an intermediate representation.
+4. Improve chunking and metadata using document structure and meaning, then evaluate chunk sizes for the intended tasks.
+5. Select and implement embedding and vector-storage components, followed by traceable retrieval and grounded answer generation.
+6. Build evaluation and observability for retrieval quality, answer quality, failures, latency, and cost.
+7. Consider hybrid retrieval, reranking, query reformulation, multi-corpus search, graph relationships, corpus governance, and agent integrations when evaluation or user needs justify them.
+
+The target architecture is incremental: source adapters, extraction, enrichment, canonical documents, chunking, embeddings, vector storage, retrieval, RAG application, and evaluation/observability. Each stage should preserve provenance and expose validated outputs before later stages depend on them.
