@@ -5,6 +5,8 @@ __pycache__/
 *.db
 eval_runs.db
 .DS_Store
+AGENTS.md
+corpus/
 
 # Ignore runtime data but keep folders
 data/uploads/*
